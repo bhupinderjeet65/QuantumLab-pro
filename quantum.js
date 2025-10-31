@@ -11,8 +11,8 @@ class QuantumLabPro {
         this.parameters = {
             param1: 1.0,
             param2: 1.0,
-            numStates: 2,
-            systemSize: 5
+            numStates: 5,
+            systemSize: 10
         };
         
         this.timeState = {
