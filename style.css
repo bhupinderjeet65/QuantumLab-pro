@@ -1,14 +1,14 @@
 /* Base styles */
 :root {
-    --primary: oklch(47.108% 0.00604 145.892);
-    --primary-dark: #4c504e;
+    --primary: #ffffff;
+    --primary-dark: #6b6868;
     --primary-light: #d4dbd7;
     --secondary: #505350;
     --accent: #484a4b;
     --dark: #000000;
     --light: #ffffff;
-    --glass: rgba(16, 39, 13, 0.034);
-    --glass-border: rgba(255, 255, 255, 0.12);
+    --glass: rgba(93, 97, 92, 0.034);
+    --glass-border: rgba(90, 85, 85, 0.12);
     --text: #ffffff;
     --text-secondary: rgba(255, 255, 255, 0.8);
     --text-muted: rgba(255, 255, 255, 0.979);
@@ -1112,6 +1112,6 @@ button:focus-visible, input:focus-visible {
 }
 
 .creator-name {
-    color: var(--primary);
+    color: var#f0f0f0;
     font-weight: 600;
 }
