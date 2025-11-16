@@ -609,7 +609,7 @@ input[type="checkbox"]:checked + .toggle-slider::before {
 
 .plot-container {
     flex: 1;
-    min-height: 250px;
+    min-height: 380px;
     border-radius: 12px;
     background: rgba(0, 0, 0, 0.3);
     overflow: hidden;
@@ -1115,3 +1115,4 @@ button:focus-visible, input:focus-visible {
     color: var#f0f0f0;
     font-weight: 600;
 }
+
