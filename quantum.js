@@ -349,7 +349,7 @@ class QuantumLabPro {
 
     solveSchrodinger1D() {
         // N reduced for real-time numerical stability
-        const N = 200;
+        const N = 150;
         let L = this.parameters.systemSize;
         let x;
 
@@ -423,10 +423,14 @@ class QuantumLabPro {
                 // Usually vectors are returned as columns. But simple-eigs might return row-by-row? 
                 // Let's assume standard format: vectors[row][col] is component of eigenvector 'col'.
 
-                let eigenPairs = result.values.map((val, idx) => ({
-                    energy: val,
-                    vector: result.vectors.map(row => row[idx])
-                }));
+                let eigenPairs = result.values.map((val, idx) => {
+                    const energy = math.complex(val).re || val;
+                    const vector = result.vectors.map(row => {
+                        const comp = row[idx];
+                        return math.complex(comp).re || comp;
+                    });
+                    return { energy, vector };
+                });
 
                 // Sort by energy
                 eigenPairs.sort((a, b) => a.energy - b.energy);
