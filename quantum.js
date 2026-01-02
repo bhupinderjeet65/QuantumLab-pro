@@ -1,4 +1,11 @@
 // QuantumLab Pro implementation
+/* =========================================================
+   Scientific Constants & Units
+   Units: ℏ = 1, m = 1
+   ========================================================= */
+const HBAR = 1;
+const MASS = 1;
+
 class QuantumLabPro {
     constructor() {
         this.currentTab = 'wavefunctions';
@@ -81,9 +88,11 @@ class QuantumLabPro {
 
     initializeEventListeners() {
         // Navigation
-        document.querySelectorAll('.nav-btn').forEach(btn => {
+        // Navigation
+        document.querySelectorAll('.nav-btn:not(.special-nav-btn)').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                this.switchTab(e.target.closest('.nav-btn').dataset.tab);
+                const tab = e.target.closest('.nav-btn').dataset.tab;
+                if (tab) this.switchTab(tab);
             });
         });
 
@@ -214,6 +223,20 @@ class QuantumLabPro {
         document.getElementById('fullscreenToggle').addEventListener('click', () => this.toggleFullscreen());
         document.getElementById('exportData').addEventListener('click', () => this.exportData());
 
+        // About Modal
+        const aboutModal = document.getElementById('aboutModal');
+        document.getElementById('aboutBtn').addEventListener('click', () => {
+            aboutModal.classList.add('show');
+        });
+        document.querySelector('.close-modal').addEventListener('click', () => {
+            aboutModal.classList.remove('show');
+        });
+        window.addEventListener('click', (e) => {
+            if (e.target === aboutModal) {
+                aboutModal.classList.remove('show');
+            }
+        });
+
         // Window resize
         window.addEventListener('resize', () => this.debounce(this.handleResize.bind(this), 250)());
     }
@@ -231,8 +254,9 @@ class QuantumLabPro {
     }
 
     startBackgroundAnimations() {
+        // Honest stats update
         setInterval(() => {
-            this.updateHeaderStats();
+            // this.updateHeaderStats(); // Header stats should update on calculation, not loop
         }, 2000);
     }
 
@@ -375,17 +399,17 @@ class QuantumLabPro {
                 switch (this.currentPotential) {
                     case 'harmonic':
                         const omega = this.parameters.param1;
-                        energy = omega * (n + 0.5);
-                        wavefunction = this.harmonicOscillatorWavefunction(x, n, omega);
+                        energy = this.hoEnergy(n, omega);
+                        wavefunction = this.hoWavefunction(x, n, omega);
                         break;
                     case 'infinite':
-                        const width = this.parameters.param1;
-                        energy = (n + 1) ** 2 * Math.PI ** 2 / (2 * width ** 2);
-                        wavefunction = this.infiniteWellWavefunction(x, n, width);
+                        const L = this.parameters.systemSize;
+                        energy = this.boxEnergy(n, L);
+                        wavefunction = this.boxWavefunction(x, n, L);
                         break;
                 }
 
-                wavefunction = this.normalizeWavefunction(wavefunction, x);
+                wavefunction = this.normalize(wavefunction, x);
                 energies.push(energy);
                 wavefunctions.push(wavefunction);
             }
@@ -440,7 +464,7 @@ class QuantumLabPro {
 
                 for (let i = 0; i < Math.min(numStates, N); i++) {
                     energies.push(eigenPairs[i].energy);
-                    wavefunctions.push(this.normalizeWavefunction(eigenPairs[i].vector, x));
+                    wavefunctions.push(this.normalize(eigenPairs[i].vector, x));
                 }
 
                 return { x, wavefunctions, energies, potential: V };
@@ -464,58 +488,57 @@ class QuantumLabPro {
         return { x, wavefunctions, energies, potential: V };
     }
 
-    harmonicOscillatorWavefunction(x, n, omega) {
-        // Dimensionless position xi = x * sqrt(m*omega/hbar). m=1, hbar=1 -> xi = x * sqrt(omega)
-        const sqrtOmega = Math.sqrt(omega);
-        const xi = x.map(val => val * sqrtOmega);
-
-        // Normalization factor An = 1 / sqrt(2^n * n! * sqrt(pi))
-        // We will normalize numerically later, but the shape comes from H_n(xi) * exp(-xi^2/2)
-
-        return xi.map(xi_val => {
-            const hermiteVal = this.hermitePolynomial(n, xi_val);
-            return hermiteVal * Math.exp(-xi_val * xi_val / 2);
-        });
+    hoEnergy(n, omega) {
+        return omega * (n + 0.5); // ✅ zero-point energy
     }
 
-    hermitePolynomial(n, x) {
+    hoWavefunction(x, n, omega) {
+        // Dimensionless position xi = x * sqrt(m*omega/hbar) -> x * sqrt(omega)
+        const xi = x.map(v => v * Math.sqrt(omega));
+        // Using the user's snippet logic directly: herimite(n, v) * exp(-v^2/2)
+        // Normalization happens later in solveSchrodinger1D via this.normalize
+        return xi.map(v =>
+            this.hermite(n, v) * Math.exp(-v * v / 2)
+        );
+    }
+
+    hermite(n, x) {
         if (n === 0) return 1;
         if (n === 1) return 2 * x;
-
-        let h_prev = 1;      // H_0
-        let h_curr = 2 * x;  // H_1
-
+        let h0 = 1, h1 = 2 * x;
         for (let i = 2; i <= n; i++) {
-            let h_next = 2 * x * h_curr - 2 * (i - 1) * h_prev;
-            h_prev = h_curr;
-            h_curr = h_next;
+            [h0, h1] = [h1, 2 * x * h1 - 2 * (i - 1) * h0];
         }
-        return h_curr;
+        return h1;
     }
 
-    infiniteWellWavefunction(x, n, width) {
-        const L = width;
-        return x.map(xi => {
-            if (Math.abs(xi) <= L / 2) {
-                return Math.sin((n + 1) * Math.PI * (xi + L / 2) / L);
-            }
-            return 0;
-        });
+    boxEnergy(n, L) {
+        // User snippet: (n+1)^2 * pi^2 / (2 * L^2)
+        return (n + 1) ** 2 * Math.PI ** 2 / (2 * L * L);
+    }
+
+    boxWavefunction(x, n, L) {
+        return x.map(xi =>
+            Math.abs(xi) <= L / 2
+                ? Math.sin((n + 1) * Math.PI * (xi + L / 2) / L)
+                : 0
+        );
     }
 
     genericWavefunction(x, n, L) {
         return x.map(xi => Math.sin((n + 1) * Math.PI * (xi + L / 2) / L));
     }
 
-    normalizeWavefunction(wavefunction, x) {
+    normalize(psi, x) {
         const dx = x[1] - x[0];
-        const norm = Math.sqrt(wavefunction.reduce((sum, psi, i) => sum + psi * psi * dx, 0));
-        return wavefunction.map(psi => psi / norm);
+        const norm = Math.sqrt(psi.reduce((s, v) => s + v * v * dx, 0));
+        return psi.map(v => v / (norm || 1));
     }
 
     // Wavefunctions Tab
     solveAndPlot() {
         const data = this.solveSchrodinger1D();
+        this.latestEnergies = data.energies; // Store for header stats
         this.plotWavefunctions(data);
         this.plotProbabilityDensities(data);
         this.plotEnergyDiagram(data);
@@ -727,7 +750,8 @@ class QuantumLabPro {
         const energyExpectation = data.energies[0];
         document.getElementById('expectationH').textContent = energyExpectation.toFixed(4);
 
-        // Momentum expectation <p> -> Real bound states have <p> = 0
+        // Momentum expectation <p> = -iħ <ψ|d/dx|ψ>
+        // For real bound states, <p> is 0.
         document.getElementById('expectationP').textContent = '0.0000';
     }
 
@@ -811,26 +835,55 @@ class QuantumLabPro {
     plotTimeEvolution() {
         const data = this.solveSchrodinger1D();
         const time = this.timeState.currentTime;
-        const timeEvolved = this.evolveWavefunction(data, time);
+
+        // Determine coefficients based on UI selection
+        const stateSelect = document.getElementById('initialState').value;
+        const coeffs = new Array(data.energies.length).fill(0);
+
+        if (stateSelect === 'ground') {
+            if (coeffs.length > 0) coeffs[0] = 1;
+        } else if (stateSelect === 'first') {
+            if (coeffs.length > 1) coeffs[1] = 1;
+        } else if (stateSelect === 'superposition') {
+            // Equal superposition of first two available states
+            if (coeffs.length > 0) coeffs[0] = 1 / Math.sqrt(2);
+            if (coeffs.length > 1) coeffs[1] = 1 / Math.sqrt(2);
+        } else if (stateSelect === 'gaussian') {
+            // Projection of Gaussian onto eigenstates (simplified: just mix many states)
+            data.energies.forEach((_, i) => {
+                coeffs[i] = Math.exp(-0.5 * Math.pow(i - 2, 2)); // Centered around n=2
+            });
+            // Normalize coeffs
+            const norm = Math.sqrt(coeffs.reduce((s, c) => s + c * c, 0));
+            for (let i = 0; i < coeffs.length; i++) coeffs[i] /= norm;
+        } else {
+            if (coeffs.length > 0) coeffs[0] = 1;
+        }
+
+        const timeEvolved = this.evolve(data, time, coeffs);
+        // timeEvolved is array of {re, im}. 
+        const prob = timeEvolved.map(psi => psi.re * psi.re + psi.im * psi.im);
+        const real = timeEvolved.map(psi => psi.re);
+        const imag = timeEvolved.map(psi => psi.im);
 
         const traces = [
             {
                 x: data.x,
-                y: timeEvolved.real,
+                y: real,
                 mode: 'lines',
                 name: 'Re[ψ(x,t)]',
                 line: { color: '#00b4db', width: 3 }
             },
             {
                 x: data.x,
-                y: timeEvolved.imaginary,
+                y: imag,
                 mode: 'lines',
                 name: 'Im[ψ(x,t)]',
                 line: { color: '#ff6b6b', width: 3 }
             },
             {
                 x: data.x,
-                y: timeEvolved.probability,
+                y: prob,
                 mode: 'lines',
                 name: '|ψ(x,t)|²',
                 line: { color: '#4ecdc4', width: 3 }
@@ -847,46 +900,66 @@ class QuantumLabPro {
         document.getElementById('timeInfo').textContent = `t = ${time.toFixed(2)}`;
 
         // Plot probability flow
-        this.plotProbabilityFlow(data, time);
+        this.plotProbabilityFlow(timeEvolved, data.x);
 
         // Plot phase space
-        this.plotPhaseSpace(data, time);
+        this.plotPhaseSpace(data.x, real, imag);
     }
 
-    evolveWavefunction(data, time) {
-        const real = new Array(data.x.length).fill(0);
-        const imaginary = new Array(data.x.length).fill(0);
-        const probability = new Array(data.x.length).fill(0);
-
-        for (let i = 0; i < data.wavefunctions.length; i++) {
-            for (let j = 0; j < data.x.length; j++) {
-                real[j] += data.wavefunctions[i][j] * Math.cos(data.energies[i] * time);
-                imaginary[j] += data.wavefunctions[i][j] * Math.sin(-data.energies[i] * time);
-                probability[j] += Math.abs(data.wavefunctions[i][j] * Math.cos(data.energies[i] * time)) ** 2;
-            }
-        }
-
-        return { real, imaginary, probability };
+    evolve(data, t, coeffs) {
+        const psi = data.x.map(() => ({ re: 0, im: 0 }));
+        data.wavefunctions.forEach((wf, n) => {
+            const phase = {
+                re: Math.cos(data.energies[n] * t),
+                im: -Math.sin(data.energies[n] * t)
+            };
+            wf.forEach((v, i) => {
+                psi[i].re += coeffs[n] * v * phase.re;
+                psi[i].im += coeffs[n] * v * phase.im;
+            });
+        });
+        return psi;
     }
 
-    plotProbabilityFlow(data, time) {
-        const probabilityFlow = new Array(data.x.length).fill(0);
+    probabilityCurrent(psi, x) {
+        const dx = x[1] - x[0];
+        return psi.map((_, i) => {
+            if (i === 0 || i === psi.length - 1) return 0;
+            // J = (hbar/m) * Im(psi* dpsi/dx). using finite diff
+            // psi[i] = re + i*im
+            // dpsi/dx ~ (psi[i+1] - psi[i-1]) / 2dx
+            // ...
+            // User snippet: (psi[i].re * (psi[i + 1].im - ψ[i - 1].im)) / (2 * dx) ... wait, this seems incomplete for full current formula
+            // J = Im(psi* grad(psi)). 
+            // psi* = re - i*im. grad(psi) = d_re + i*d_im.
+            // psi* grad(psi) = (re*d_re + im*d_im) + i(re*d_im - im*d_re)
+            // Im(...) = re*d_im - im*d_re
+            // User snippet provided a formula: (ψ[i].re * (ψ[i + 1].im - ψ[i - 1].im)) / (2 * dx)
+            // That looks like Re * d(Im)/dx. Missing - Im * d(Re)/dx term?
+            // Actually, let's stick closer to the user snippet logic but add the missing term if needed for correctness? 
+            // The user snippet said: return (ψ[i].re * (ψ[i + 1].im - ψ[i - 1].im)) / (2 * dx);
+            // Wait, I should verify the user snippet's correctness or just use it?
+            // User said "Scientifically Correct Core Engine". I should trust it or slightly amend if obvious.
+            // Let's implement the full term: re * d_im/dx - im * d_re/dx
 
-        // Calculate probability current (simplified)
-        for (let i = 1; i < data.x.length - 1; i++) {
-            probabilityFlow[i] = (data.x[i + 1] - data.x[i - 1]) * Math.sin(time) * 0.1;
-        }
+            const dIm = (psi[i + 1].im - psi[i - 1].im) / (2 * dx);
+            const dRe = (psi[i + 1].re - psi[i - 1].re) / (2 * dx);
+            return (psi[i].re * dIm - psi[i].im * dRe);
+        });
+    }
 
+    plotProbabilityFlow(psi, x) {
+        const current = this.probabilityCurrent(psi, x);
         const trace = {
-            x: data.x,
-            y: probabilityFlow,
+            x: x,
+            y: current,
             mode: 'lines',
-            name: 'Probability Current',
+            name: 'Probability Current J',
             line: { color: '#feca57', width: 3 }
         };
 
         const layout = {
-            title: { text: 'Probability Flow', font: { color: '#ffffff' } },
+            title: { text: 'Probability Current J(x,t)', font: { color: '#ffffff' } },
             xaxis: {
                 title: { text: 'Position x', font: { color: '#ffffff' } },
                 gridcolor: 'rgba(255,255,255,0.1)',
@@ -894,7 +967,7 @@ class QuantumLabPro {
                 tickfont: { color: '#ffffff' }
             },
             yaxis: {
-                title: { text: 'Current Density', font: { color: '#ffffff' } },
+                title: { text: 'Current Density J', font: { color: '#ffffff' } },
                 gridcolor: 'rgba(255,255,255,0.1)',
                 linecolor: '#ffffff',
                 tickfont: { color: '#ffffff' }
@@ -908,31 +981,51 @@ class QuantumLabPro {
         Plotly.react('probabilityFlowPlot', [trace], layout, { responsive: true });
     }
 
-    plotPhaseSpace(data, time) {
-        const x = data.x;
-        const p = Array.from({ length: x.length }, (_, i) => Math.sin(x[i] + time));
+    plotPhaseSpace(x, real, imag) {
+        // Plot Momentum Space Distribution |φ(k)|² instead of fake phase space
+        // φ(k) = integral ψ(x) e^(-ikx) dx
+        // Discrete Fourier Transform
+
+        const N = x.length;
+        const dx = x[1] - x[0];
+        const L = N * dx;
+        const k = Array.from({ length: N }, (_, i) => (i - N / 2) * (2 * Math.PI / L));
+
+        const phiSq = k.map(ki => {
+            let re = 0, im = 0;
+            for (let j = 0; j < N; j++) {
+                const angle = -ki * x[j];
+                const wr = real[j]; // Re[psi(x)]
+                const wi = imag[j]; // Im[psi(x)]
+                const c = Math.cos(angle);
+                const s = Math.sin(angle);
+                // (wr + i wi) * (c + i s) = (wr*c - wi*s) + i(wr*s + wi*c)
+                re += (wr * c - wi * s) * dx;
+                im += (wr * s + wi * c) * dx;
+            }
+            return (re * re + im * im) / (2 * Math.PI);
+        });
 
         const trace = {
-            x: x,
-            y: p,
-            mode: 'markers',
-            marker: {
-                size: 3,
-                color: '#ff6b6b'
-            },
-            name: 'Phase Space'
+            x: k,
+            y: phiSq,
+            mode: 'lines',
+            name: 'Momentum Dist.',
+            line: { color: '#ff6b6b', width: 2 },
+            fill: 'tozeroy',
+            fillcolor: 'rgba(255, 107, 107, 0.2)'
         };
 
         const layout = {
-            title: { text: 'Phase Space', font: { color: '#ffffff' } },
+            title: { text: 'Momentum Space |φ(k)|²', font: { color: '#ffffff' } },
             xaxis: {
-                title: { text: 'Position x', font: { color: '#ffffff' } },
+                title: { text: 'Momentum k', font: { color: '#ffffff' } },
                 gridcolor: 'rgba(255,255,255,0.1)',
                 linecolor: '#ffffff',
                 tickfont: { color: '#ffffff' }
             },
             yaxis: {
-                title: { text: 'Momentum p', font: { color: '#ffffff' } },
+                title: { text: 'Probability Density', font: { color: '#ffffff' } },
                 gridcolor: 'rgba(255,255,255,0.1)',
                 linecolor: '#ffffff',
                 tickfont: { color: '#ffffff' }
@@ -983,14 +1076,14 @@ class QuantumLabPro {
         const { energy, barrierHeight, barrierWidth } = this.scatteringState;
         const x = Array.from({ length: 500 }, (_, i) => -10 + i * 20 / 499);
         const potential = this.getBarrierPotential(x, barrierHeight, barrierWidth);
-        const transmission = this.calculateTransmissionProbability(energy, barrierHeight, barrierWidth);
-        const reflection = 1 - transmission;
+        const transmission = this.tunneling(energy, barrierHeight, barrierWidth);
 
         // Update results
-        document.getElementById('transmissionValue').textContent = `${(transmission * 100).toFixed(1)}%`;
-        document.getElementById('reflectionValue').textContent = `${(reflection * 100).toFixed(1)}%`;
+        // Update results
+        document.getElementById('transmissionValue').textContent = `${(transmission.T * 100).toFixed(1)}%`;
+        document.getElementById('reflectionValue').textContent = `${(transmission.R * 100).toFixed(1)}%`;
         document.getElementById('tunnelingValue').textContent =
-            energy < barrierHeight ? `${(transmission * 100).toFixed(1)}%` : 'N/A';
+            energy < barrierHeight ? `${(transmission.T * 100).toFixed(1)}%` : 'N/A';
 
         const traces = [{
             x: x,
@@ -1029,40 +1122,35 @@ class QuantumLabPro {
         }
     }
 
-    calculateTransmissionProbability(energy, barrierHeight, barrierWidth) {
-        // Exact 1D Rectangular Barrier Transmission
-        // T = 1 / (1 + (V0^2 * sinh^2(k2*a)) / (4*E*(V0-E))) for E < V0 (Tunneling)
-        // T = 1 / (1 + (V0^2 * sin^2(k1*a)) / (4*E*(E-V0))) for E > V0
-
-        const E = energy;
-        const V0 = barrierHeight;
-        const a = barrierWidth;
-        const epsilon = 1e-10; // Avoid division by zero
-
+    // Unified tunneling method from snippet
+    tunneling(E, V0, a) {
+        let T;
+        const epsilon = 1e-10;
+        // Avoid division by zero at resonances or E=V0
         if (Math.abs(E - V0) < epsilon) {
-            // Special Case E approx V0: T = 1 / (1 + m*a^2*V0 / 2hbar^2) -> 1 / (1 + a^2 * V0 / 2)
-            return 1.0 / (1.0 + (a * a * V0) / 2.0);
+            // Special limit E -> V0
+            return { T: 1.0 / (1.0 + (MASS * a * a * V0) / (2 * HBAR * HBAR)), R: 1 - (1.0 / (1.0 + (MASS * a * a * V0) / (2 * HBAR * HBAR))) };
         }
 
         if (E < V0) {
-            // Tunneling Regime
-            const k2 = Math.sqrt(2 * (V0 - E));
-            const term = Math.sinh(k2 * a);
-            const factor = (V0 * V0 * term * term) / (4 * E * (V0 - E));
-            return 1.0 / (1.0 + factor);
+            const kappa = Math.sqrt(2 * MASS * (V0 - E)) / HBAR;
+            // sinh(kappa * a)^2
+            const sinhl = Math.sinh(kappa * a);
+            const denom = 1 + (V0 * V0 * sinhl * sinhl) / (4 * E * (V0 - E));
+            T = 1 / denom;
         } else {
-            // Propagation Regime
-            const k1 = Math.sqrt(2 * (E - V0));
-            const term = Math.sin(k1 * a);
-            const factor = (V0 * V0 * term * term) / (4 * E * (E - V0));
-            return 1.0 / (1.0 + factor);
+            const q = Math.sqrt(2 * MASS * (E - V0)) / HBAR;
+            const sinl = Math.sin(q * a);
+            const denom = 1 + (V0 * V0 * sinl * sinl) / (4 * E * (E - V0));
+            T = 1 / denom;
         }
+        return { T, R: 1 - T };
     }
 
     plotTransmissionVsEnergy() {
         const energies = Array.from({ length: 100 }, (_, i) => 0.1 + i * 20 / 99);
         const transmissions = energies.map(energy =>
-            this.calculateTransmissionProbability(energy, this.scatteringState.barrierHeight, this.scatteringState.barrierWidth)
+            this.tunneling(energy, this.scatteringState.barrierHeight, this.scatteringState.barrierWidth).T
         );
 
         const trace = {
@@ -1187,7 +1275,7 @@ class QuantumLabPro {
         );
         Plotly.react('advancedPlot', traces, layout, { responsive: true });
 
-        document.getElementById('advancedPlotTitle').textContent = 'Hydrogen Atom Radial Wavefunction';
+        document.getElementById('advancedPlotTitle').textContent = 'Hydrogen Atom Radial Wavefunction (Qualitative visualization)';
     }
 
     plotSpinSystem() {
@@ -1364,7 +1452,7 @@ class QuantumLabPro {
         };
 
         const layout = {
-            title: { text: 'Density Matrix', font: { color: '#ffffff' } },
+            title: { text: 'Density Matrix (Illustrative)', font: { color: '#ffffff' } },
             paper_bgcolor: 'rgba(0,0,0,0)',
             plot_bgcolor: 'rgba(0,0,0,0)',
             font: { color: '#ffffff' },
@@ -1463,11 +1551,31 @@ class QuantumLabPro {
     updateHeaderStats() {
         const particleCount = document.getElementById('particleCount');
         const energyLevel = document.getElementById('energyLevel');
-        const uncertainty = document.getElementById('uncertainty');
+
+        let groundStateEnergy = 0;
+        if (this.currentPotential === 'harmonic') {
+            groundStateEnergy = this.hoEnergy(0, this.parameters.param1);
+        } else if (this.currentPotential === 'infinite') {
+            groundStateEnergy = this.boxEnergy(0, this.parameters.systemSize);
+        } else {
+            // For numerical results, better to store them. 
+            // But for now, let's recalculate or use a safe fallback if numerical.
+            // Since we don't store "data" globally, let's just use the HO formula as fallback 
+            // OR re-run the cheap analytical functions.
+            groundStateEnergy = this.hoEnergy(0, this.parameters.param1);
+        }
+
+        // If we have stored latest energies from a plot update, use them
+        if (this.latestEnergies && this.latestEnergies.length > 0) {
+            groundStateEnergy = this.latestEnergies[0];
+        }
 
         this.animateValue(particleCount, this.parameters.numStates);
-        this.animateValue(energyLevel, (this.parameters.param1 * 0.5).toFixed(2));
-        this.animateValue(uncertainty, this.quantumProperties.uncertaintyProduct.toFixed(2));
+        this.animateValue(energyLevel, groundStateEnergy.toFixed(3));
+        if (this.quantumProperties && this.quantumProperties.uncertaintyProduct) {
+            const uncertainty = document.getElementById('uncertainty');
+            this.animateValue(uncertainty, this.quantumProperties.uncertaintyProduct.toFixed(2));
+        }
     }
 
     animateValue(element, target) {
@@ -1562,28 +1670,34 @@ class QuantumLabPro {
         const data = this.solveSchrodinger1D();
         const traces = [];
 
-        const timeEvolved = new Array(data.x.length).fill(0);
-        for (let i = 0; i < Math.min(2, data.wavefunctions.length); i++) {
-            const phase = Math.cos(data.energies[i] * this.animationTime);
-            data.wavefunctions[i].forEach((psi, idx) => {
-                timeEvolved[idx] += psi * phase;
-            });
-        }
+        // Correct Unitary Evolution
+        // Evolve an equal superposition of first two states (or available states)
+        const coeffs = data.wavefunctions.map(() => 0);
+        if (coeffs.length > 0) coeffs[0] = 1 / Math.sqrt(2);
+        if (coeffs.length > 1) coeffs[1] = 1 / Math.sqrt(2);
 
-        const norm = Math.sqrt(timeEvolved.reduce((sum, psi) => sum + psi * psi, 0));
-        const normalized = timeEvolved.map(psi => psi / norm);
+        // Re-normalize if fewer than 2 states
+        const norm = Math.sqrt(coeffs.reduce((s, c) => s + c * c, 0));
+        if (norm > 0) coeffs.forEach((c, i) => coeffs[i] /= norm);
+
+        const psi = this.evolve(data, this.animationTime, coeffs);
+        // psi is {re, im} array
+
+        const prob = psi.map(v => v.re * v.re + v.im * v.im);
+        // Normalize for display consistency
+        // (Analytical evolution preserves norm, but let's ensure it maps to screen well)
 
         traces.push({
             x: data.x,
-            y: normalized,
+            y: psi.map(v => v.re), // Real part
             mode: 'lines',
-            name: 'ψ(x,t)',
+            name: 'Re[ψ(x,t)]',
             line: { color: '#00b4db', width: 3 }
         });
 
         traces.push({
             x: data.x,
-            y: normalized.map(psi => psi * psi),
+            y: prob,
             mode: 'lines',
             name: '|ψ(x,t)|²',
             line: { color: '#ff6b6b', width: 3 }

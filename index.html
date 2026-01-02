@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
 </head>
+
 <body>
     <!-- Animated Background -->
     <div class="background">
@@ -66,6 +68,10 @@
                     <span class="nav-text">Advanced</span>
                 </button>
             </div>
+            <button class="nav-btn special-nav-btn" id="aboutBtn"
+                style="position: absolute; right: 20px; background: rgba(255,255,255,0.1);">
+                <span class="nav-text">About App</span>
+            </button>
         </nav>
 
         <!-- Main Content -->
@@ -131,7 +137,8 @@
                                     <span class="slider-value" id="param2-value">1.0</span>
                                 </div>
                                 <div class="slider-container">
-                                    <div class="units-badge" style="font-size: 0.8em; color: #aaa; margin-bottom: 5px;">Units: Atomic (ℏ=1, m=1)</div>
+                                    <div class="units-badge" style="font-size: 0.8em; color: #aaa; margin-bottom: 5px;">
+                                        Units: Atomic (ℏ=1, m=1)</div>
                                     <label for="numStates">Energy Levels</label>
                                     <input type="range" id="numStates" min="1" max="8" step="1" value="5">
                                     <span class="slider-value" id="numStates-value">5</span>
@@ -150,7 +157,8 @@
                             <div class="custom-inputs">
                                 <div class="input-group">
                                     <label for="customFunction">V(x) =</label>
-                                    <input type="text" id="customFunction" placeholder="0.5 * x * x" value="0.5 * x * x">
+                                    <input type="text" id="customFunction" placeholder="0.5 * x * x"
+                                        value="0.5 * x * x">
                                 </div>
                                 <div class="range-inputs">
                                     <div class="input-group">
@@ -619,38 +627,38 @@
 
                         <!-- <div class="glass-panel plot-panel">
                             <div class="panel-header"> -->
-                                <!-- <h3>Bloch Sphere</h3> -->
-                            </div>
-                            <!-- <div id="blochSphere" class="plot-container"></div> -->
-                        </div>
+                        <!-- <h3>Bloch Sphere</h3> -->
+                    </div>
+                    <!-- <div id="blochSphere" class="plot-container"></div> -->
+                </div>
 
-                        <!-- <div class="glass-panel plot-panel">
+                <!-- <div class="glass-panel plot-panel">
                             <div class="panel-header">
                                 <h3>Density Matrix</h3> -->
-                            </div>
-                            <!-- <div id="densityMatrix" class="plot-container"></div> -->
-                        </div>
-                    </div>
-                </div>
             </div>
-        </main>
+            <!-- <div id="densityMatrix" class="plot-container"></div> -->
+    </div>
+    </div>
+    </div>
+    </div>
+    </main>
 
-            <!-- Footer -->
-        <footer class="glass-footer">
-            <div class="footer-content">
-                <div class="footer-info">
-                    <span class="app-version">QuantumLab Pro v1.0</span>
-                    <span class="app-status" id="appStatus">● Ready</span>
-                 </div>
-                <span class="creator-name">Created by Bhupinderjeet Singh, B.Tech CSE(AI/ML) </span>
-                <div class="footer-links">
-                    <button class="footer-link" id="themeToggle">Theme</button>
-                    <button class="footer-link" id="fullscreenToggle">Fullscreen</button>
-                    <button class="footer-link" id="exportData">Export</button>
-                </div>
+    <!-- Footer -->
+    <footer class="glass-footer">
+        <div class="footer-content">
+            <div class="footer-info">
+                <span class="app-version">QuantumLab Pro v1.0</span>
+                <span class="app-status" id="appStatus">● Ready</span>
             </div>
-        </footer>
-  
+            <span class="creator-name">Created by Bhupinderjeet Singh, B.Tech CSE(AI/ML) </span>
+            <div class="footer-links">
+                <button class="footer-link" id="themeToggle">Theme</button>
+                <button class="footer-link" id="fullscreenToggle">Fullscreen</button>
+                <button class="footer-link" id="exportData">Export</button>
+            </div>
+        </div>
+    </footer>
+
 
     <!-- Loading Screen -->
     <div class="loading-screen" id="loadingScreen">
@@ -667,10 +675,87 @@
         </div>
     </div>
 
+    <!-- About Application Modal -->
+    <div id="aboutModal" class="modal">
+        <div class="modal-content glass-panel">
+            <span class="close-modal">&times;</span>
+            <div class="modal-body">
+                <h2>QuantumLab Pro - Student Guidance</h2>
+                <p><strong>Introduction</strong></p>
+                <p>Welcome to QuantumLab Pro. This application is designed to help physics students visualize and
+                    understand core concepts of quantum mechanics that are often difficult to imagine using equations
+                    alone.</p>
+                <p>All simulations in this application use natural units: <strong>ℏ (Planck’s constant) = 1</strong>,
+                    <strong>Mass m = 1</strong>. This simplifies equations while preserving correct physics.</p>
+
+                <h3>1. Starting the Application</h3>
+                <p>Open the application in a modern web browser. Wait for loading. Once loaded, you will see multiple
+                    tabs at the top focusing on different quantum-mechanical concepts.</p>
+
+                <h3>2. Wavefunctions Tab (Core Quantum Mechanics)</h3>
+                <p><strong>Purpose:</strong> To study stationary states of quantum systems.</p>
+                <p><strong>How to Use:</strong> Choose a potential (Harmonic, Infinite Well, Finite Well, etc.). Adjust
+                    parameters using sliders (systemSize, numStates). Observe Wavefunctions ψₙ(x), Probability
+                    densities, and Energy levels.</p>
+                <p><strong>What to Learn:</strong> Energy quantization, Node structure, Zero-point energy, Effect of
+                    changing potential shape.</p>
+
+                <h3>3. Operators Tab</h3>
+                <p><strong>Purpose:</strong> To connect operators with physical observables.</p>
+                <p><strong>How to Use:</strong> Select an operator (Position x̂, Momentum p̂, Energy H). Observe
+                    Operator representations, Eigenvalue spectrum, and Expectation values.</p>
+                <p><strong>What to Learn:</strong> Operators as observables, Expectation values, Why ⟨p⟩ = 0 for bound
+                    real wavefunctions.</p>
+
+                <h3>4. Time Evolution Tab</h3>
+                <p><strong>Purpose:</strong> To visualize how quantum states evolve in time.</p>
+                <p><strong>How to Use:</strong> Choose an initial state (Ground, Superposition, Gaussian). Move the time
+                    slider or press Play.</p>
+                <p><strong>Observe:</strong> Real/Imaginary parts, Probability density |ψ(x,t)|², Probability current
+                    J(x,t), Momentum-space distribution |φ(k)|².</p>
+                <p><strong>What to Learn:</strong> Time-dependent Schrödinger equation, Phase evolution, Interference,
+                    Probability conservation.</p>
+
+                <h3>5. Scattering Tab (Quantum Tunneling)</h3>
+                <p><strong>Purpose:</strong> To study quantum tunneling and reflection.</p>
+                <p><strong>How to Use:</strong> Set Particle energy, Barrier height/width. Choose barrier type. Observe
+                    Transmission (T) and Reflection (R) probabilities (T + R = 1).</p>
+                <p><strong>What to Learn:</strong> Tunneling even when E < V₀, Resonant transmission, Classical vs
+                        quantum behavior.</p>
+
+                        <h3>6. Advanced Systems Tab</h3>
+                        <p><strong>Purpose:</strong> To explore additional quantum models.</p>
+                        <p><strong>Available Systems:</strong> Hydrogen Atom (qualitative), Spin systems, 2D Harmonic
+                            Oscillator, Quantum Dot, Bloch Sphere.</p>
+                        <p><strong>Note:</strong> Some advanced visualizations are illustrative, not exact analytical
+                            solutions.</p>
+
+                        <h3>7. Understanding Units and Accuracy</h3>
+                        <p>All results are shown in dimensionless natural units. Energy values are internally
+                            consistent. Approximations are explicitly labeled.</p>
+
+                        <h3>8. Recommended Learning Approach</h3>
+                        <p>Change one parameter at a time. Predict what should happen. Compare numerical results with
+                            textbook formulas. Use this tool to build intuition.</p>
+
+                        <h3>9. What This Tool Is (and Is Not)</h3>
+                        <p><strong>IS:</strong> A visualization aid, A conceptual learning platform, A
+                            physics-consistent simulator.</p>
+                        <p><strong>IS NOT:</strong> A symbolic algebra system, A research-grade solver, A replacement
+                            for mathematical derivations.</p>
+
+                        <p
+                            style="margin-top: 20px; font-style: italic; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+                            "Quantum mechanics is not only equations — it is structure, symmetry, and evolution. Use
+                            this application to see what equations mean, test your understanding, and build physical
+                            intuition. If you can explain what you see here in words, you are truly learning quantum
+                            mechanics."
+                        </p>
+            </div>
+        </div>
+    </div>
+
     <script src="quantum.js"></script>
 </body>
+
 </html>
-
-
-
-
