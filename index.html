@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantumLab Pro | Advanced Quantum Mechanics Simulator</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="background">
+        <div class="quantum-particle p1"></div>
+        <div class="quantum-particle p2"></div>
+        <div class="quantum-particle p3"></div>
+        <div class="quantum-particle p4"></div>
+        <div class="quantum-particle p5"></div>
+        <div class="glow-effect"></div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="glass-header">
+            <div class="header-content">
+                <h1 class="title-glitch">QuantumLab Pro</h1>
+                <p class="subtitle">Advanced Quantum Mechanics Visualization Platform</p>
+                <div class="header-stats">
+                    <div class="stat">
+                        <span class="stat-value" id="particleCount">0</span>
+                        <span class="stat-label">Quantum States</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="energyLevel">0.00</span>
+                        <span class="stat-label">Energy Level</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="uncertainty">0.50</span>
+                        <span class="stat-label">Uncertainty</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="glass-nav">
+            <div class="nav-container">
+                <button class="nav-btn active" data-tab="wavefunctions">
+                    <!-- <span class="nav-icon">🌊</span> -->
+                    <span class="nav-text">Wavefunctions</span>
+                </button>
+                <button class="nav-btn" data-tab="operators">
+                    <!-- <span class="nav-icon">⚡</span> -->
+                    <span class="nav-text">Operators</span>
+                </button>
+                <button class="nav-btn" data-tab="time-evolution">
+                    <!-- <span class="nav-icon">⏰</span> -->
+                    <span class="nav-text">Time Evolution</span>
+                </button>
+                <button class="nav-btn" data-tab="scattering">
+                    <!-- <span class="nav-icon">🚀</span> -->
+                    <span class="nav-text">Scattering</span>
+                </button>
+                <button class="nav-btn" data-tab="advanced">
+                    <!-- <span class="nav-icon">🔬</span> -->
+                    <span class="nav-text">Advanced</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Wavefunctions Tab -->
+            <div class="tab-content active" id="wavefunctions-tab">
+                <div class="content-grid">
+                    <!-- Controls Panel -->
+                    <div class="glass-panel controls-panel">
+                        <div class="panel-header">
+                            <h3>Quantum Configuration</h3>
+                            <div class="panel-actions">
+                                <!-- <button class="icon-btn" id="helpBtn" title="Help">?</button>
+                                <button class="icon-btn" id="presetBtn" title="Presets">⚙️</button> -->
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <h4>Quantum Potential</h4>
+                            <div class="potential-grid">
+                                <button class="potential-btn active" data-potential="harmonic">
+                                    <!-- <span class="btn-icon">⭕</span> -->
+                                    Harmonic
+                                </button>
+                                <button class="potential-btn" data-potential="infinite">
+                                    <!-- <span class="btn-icon">📦</span> -->
+                                    Infinite Well
+                                </button>
+                                <button class="potential-btn" data-potential="finite">
+                                    <!-- <span class="btn-icon">📏</span> -->
+                                    Finite Well
+                                </button>
+                                <button class="potential-btn" data-potential="step">
+                                    <!-- <span class="btn-icon">📈</span> -->
+                                    Step
+                                </button>
+                                <button class="potential-btn" data-potential="double">
+                                    <!-- <span class="btn-icon">⛰️</span> -->
+                                    Double Well
+                                </button>
+                                <button class="potential-btn" data-potential="coulomb">
+                                    <!-- <span class="btn-icon">⚛️</span> -->
+                                    Coulomb
+                                </button>
+                                <button class="potential-btn" data-potential="custom">
+                                    <!-- <span class="btn-icon">🎨</span> -->
+                                    Custom
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <h4>Parameters</h4>
+                            <div class="slider-group">
+                                <div class="slider-container">
+                                    <label for="param1">Frequency (ω)</label>
+                                    <input type="range" id="param1" min="0.1" max="5" step="0.1" value="1.0">
+                                    <span class="slider-value" id="param1-value">1.0</span>
+                                </div>
+                                <div class="slider-container">
+                                    <label for="param2">Depth / Height (V₀)</label>
+                                    <input type="range" id="param2" min="0.1" max="10" step="0.1" value="1.0">
+                                    <span class="slider-value" id="param2-value">1.0</span>
+                                </div>
+                                <div class="slider-container">
+                                    <div class="units-badge" style="font-size: 0.8em; color: #aaa; margin-bottom: 5px;">Units: Atomic (ℏ=1, m=1)</div>
+                                    <label for="numStates">Energy Levels</label>
+                                    <input type="range" id="numStates" min="1" max="8" step="1" value="5">
+                                    <span class="slider-value" id="numStates-value">5</span>
+                                </div>
+                                <div class="slider-container">
+                                    <label for="systemSize">System Size (L)</label>
+                                    <input type="range" id="systemSize" min="5" max="20" step="1" value="10">
+                                    <span class="slider-value" id="systemSize-value">10</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Custom Parameters -->
+                        <div class="control-group custom-params" id="customParams" style="display: none;">
+                            <h4>Custom Potential</h4>
+                            <div class="custom-inputs">
+                                <div class="input-group">
+                                    <label for="customFunction">V(x) =</label>
+                                    <input type="text" id="customFunction" placeholder="0.5 * x * x" value="0.5 * x * x">
+                                </div>
+                                <div class="range-inputs">
+                                    <div class="input-group">
+                                        <label for="customMin">X Min</label>
+                                        <input type="number" id="customMin" value="-5" step="0.1">
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="customMax">X Max</label>
+                                        <input type="number" id="customMax" value="5" step="0.1">
+                                    </div>
+                                </div>
+                                <button id="applyCustom" class="glass-btn primary">Apply Function</button>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <h4>Visualization</h4>
+                            <div class="toggle-group">
+                                <label class="toggle-item">
+                                    <input type="checkbox" id="showProbability" checked>
+                                    <span class="toggle-slider"></span>
+                                    Probability Density
+                                </label>
+                                <label class="toggle-item">
+                                    <input type="checkbox" id="showEnergyLevels" checked>
+                                    <span class="toggle-slider"></span>
+                                    Energy Levels
+                                </label>
+                                <label class="toggle-item">
+                                    <input type="checkbox" id="showPotential" checked>
+                                    <span class="toggle-slider"></span>
+                                    Potential
+                                </label>
+                                <label class="toggle-item">
+                                    <input type="checkbox" id="showUncertainty">
+                                    <span class="toggle-slider"></span>
+                                    Uncertainty
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button id="animateBtn" class="glass-btn primary animate-btn">
+                                <!-- <span class="btn-icon">🎬</span> -->
+                                Animate Evolution
+                            </button>
+                            <button id="screenshotBtn" class="glass-btn secondary">
+                                <!-- <span class="btn-icon">📸</span> -->
+                                Capture
+                            </button>
+                            <button id="resetBtn" class="glass-btn outline">
+                                <!-- <span class="btn-icon">🔄</span> -->
+                                Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Visualizations -->
+                    <div class="visualization-grid">
+                        <div class="glass-panel plot-panel">
+                            <div class="panel-header">
+                                <h3>Wavefunctions ψₙ(x)</h3>
+                                <span class="plot-info" id="wavefunctionInfo">5 states</span>
+                            </div>
+                            <div id="wavefunctionPlot" class="plot-container"></div>
+                        </div>
+
+                        <div class="glass-panel plot-panel">
+                            <div class="panel-header">
+                                <h3>Probability Density |ψₙ(x)|²</h3>
+                                <span class="plot-info" id="probabilityInfo">Normalized</span>
+                            </div>
+                            <div id="probabilityPlot" class="plot-container"></div>
+                        </div>
+
+                        <div class="glass-panel plot-panel">
+                            <div class="panel-header">
+                                <h3>Energy Spectrum</h3>
+                                <span class="plot-info" id="energyInfo">Quantized</span>
+                            </div>
+                            <div id="energyDiagram" class="plot-container"></div>
+                        </div>
+
+                        <div class="glass-panel info-panel">
+                            <div class="panel-header">
+                                <h3>Quantum Properties</h3>
+                                <span class="plot-info">Real-time</span>
+                            </div>
+                            <div id="quantumProperties" class="properties-container">
+                                <div class="property-grid">
+                                    <div class="property-card">
+                                        <div class="property-icon">Δx</div>
+                                        <div class="property-info">
+                                            <span class="property-label">Position Uncertainty</span>
+                                            <span class="property-value" id="deltaX">0.000</span>
+                                        </div>
+                                    </div>
+                                    <div class="property-card">
+                                        <div class="property-icon">Δp</div>
+                                        <div class="property-info">
+                                            <span class="property-label">Momentum Uncertainty</span>
+                                            <span class="property-value" id="deltaP">0.000</span>
+                                        </div>
+                                    </div>
+                                    <div class="property-card">
+                                        <div class="property-icon">⨉</div>
+                                        <div class="property-info">
+                                            <span class="property-label">Uncertainty Product</span>
+                                            <span class="property-value" id="uncertaintyProduct">0.000</span>
+                                        </div>
+                                    </div>
+                                    <div class="property-card">
+                                        <div class="property-icon">⚖️</div>
+                                        <div class="property-info">
+                                            <span class="property-label">Heisenberg Limit</span>
+                                            <span class="property-value" id="heisenbergLimit">≥ 0.500</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Operators Tab -->
+            <div class="tab-content" id="operators-tab">
+                <div class="content-grid">
+                    <div class="glass-panel controls-panel">
+                        <div class="panel-header">
+                            <h3>Quantum Operators</h3>
+                        </div>
+
+                        <div class="control-group">
+                            <h4>Operator Selection</h4>
+                            <div class="operator-grid">
+                                <button class="operator-btn active" data-operator="position">
+                                    <!-- <span class="btn-icon">📍</span> -->
+                                    Position
+                                </button>
+                                <button class="operator-btn" data-operator="momentum">
+                                    <!-- <span class="btn-icon">🚀</span> -->
+                                    Momentum
+                                </button>
+                                <button class="operator-btn" data-operator="energy">
+                                    <!-- <span class="btn-icon">⚡</span> -->
+                                    Energy
+                                </button>
+                                <button class="operator-btn" data-operator="angular">
+                                    <!-- <span class="btn-icon">🔄</span> -->
+                                    Angular
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <h4>Commutator Relations</h4>
+                            <div class="commutator-display">
+                                <div class="commutator-equation">[x̂, p̂] = iℏ</div>
+                                <button id="calculateCommutator" class="glass-btn primary">Calculate Commutator</button>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <h4>Expectation Values</h4>
+                            <div class="expectation-values">
+                                <div class="expectation-item">
+                                    <span class="expectation-label">⟨x⟩</span>
+                                    <span class="expectation-value" id="expectationX">0.000</span>
+                                </div>
+                                <div class="expectation-item">
+                                    <span class="expectation-label">⟨p⟩</span>
+                                    <span class="expectation-value" id="expectationP">0.000</span>
+                                </div>
+                                <div class="expectation-item">
+                                    <span class="expectation-label">⟨H⟩</span>
+                                    <span class="expectation-value" id="expectationH">0.000</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="visualization-grid">
+                        <div class="glass-panel plot-panel">
+                            <div class="panel-header">
+                                <h3>Operator Visualization</h3>
+                            </div>
+                            <div id="operatorPlot" class="plot-container"></div>
+                        </div>
+
+                        <div class="glass-panel plot-panel">
+                            <div class="panel-header">
+                                <h3>Matrix Representation</h3>
+                            </div>
+                            <div id="matrixPlot" class="plot-container"></div>
+                        </div>
+
+                        <div class="glass-panel plot-panel">
+                            <div class="panel-header">
+                                <h3>Eigenvalues Spectrum</h3>
+                            </div>
+                            <div id="eigenvaluePlot" class="plot-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Time Evolution Tab -->
+            <div class="tab-content" id="time-evolution-tab">
+                <div class="content-grid">
+                    <div class="glass-panel controls-panel">
+                        <div class="panel-header">
+                            <h3>Time Evolution Controls</h3>
+                        </div>
+
+                        <div class="control-group">
+                            <h4>Time Parameters</h4>
+                            <div class="slider-group">
+                                <div class="slider-container">
+                                    <label for="timeSlider">Time (t)</label>
+                                    <input type="range" id="timeSlider" min="0" max="10" step="0.1" value="0">
+                                    <span class="slider-value" id="timeValue">0.0</span>
+                                </div>
+                                <div class="slider-container">
+                                    <label for="timeSpeed">Animation Speed</label>
+                                    <input type="range" id="timeSpeed" min="0.1" max="2" step="0.1" value="1">
+                                    <span class="slider-value" id="speedValue">1.0x</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <h4>Initial State</h4>
+                            <div class="state-selection">
+                                <select id="initialState" class="glass-select">
+                                    <option value="ground">Ground State</option>
+                                    <option value="first">First Excited State</option>
+                                    <option value="superposition">Superposition</option>
+                                    <option value="gaussian">Gaussian Wavepacket</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <h4>Time-Dependent Potential</h4>
+                            <div class="toggle-group">
+                                <label class="toggle-item">
+                                    <input type="checkbox" id="timeDependentPotential">
+                                    <span class="toggle-slider"></span>
+                                    Enable Time-Dependent V(x,t)
+                                </label>
+                            </div>
+                            <div class="input-group">
+                                <label for="timePotential">V(x,t) =</label>
+                                <input type="text" id="timePotential" placeholder="0.5 * x * x * Math.sin(t)" disabled>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button id="playBtn" class="glass-btn primary">
+                                <span class="btn-icon">▶️</span>
+                                Play Animation
+                            </button>
+                            <button id="pauseBtn" class="glass-btn outline">
+                                <span class="btn-icon">⏸️</span>
+                                Pause
+                            </button>
+                            <button id="resetTimeBtn" class="glass-btn outline">
+                                <span class="btn-icon">🔄</span>
+                                Reset Time
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="visualization-grid">
+                        <div class="glass-panel plot-panel">
+                            <div class="panel-header">
+                                <h3>Time Evolution</h3>
+                                <span class="plot-info" id="timeInfo">t = 0.0</span>
+                            </div>
+                            <div id="timeEvolutionPlot" class="plot-container"></div>
+                        </div>
+
+                        <div class="glass-panel plot-panel">
+                            <div class="panel-header">
+                                <h3>Probability Flow</h3>
+                            </div>
+                            <div id="probabilityFlowPlot" class="plot-container"></div>
+                        </div>
+
+                        <div class="glass-panel plot-panel">
+                            <div class="panel-header">
+                                <h3>Phase Space</h3>
+                            </div>
+                            <div id="phaseSpacePlot" class="plot-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            Scattering Tab
+            <div class="tab-content" id="scattering-tab">
+                <div class="content-grid">
+                    <div class="glass-panel controls-panel">
+                        <div class="panel-header">
+                            <h3>Scattering Parameters</h3>
+                        </div>
+
+                        <div class="control-group">
+                            <h4>Scattering Setup</h4>
+                            <div class="slider-group">
+                                <div class="slider-container">
+                                    <label for="particleEnergy">Particle Energy</label>
+                                    <input type="range" id="particleEnergy" min="0.1" max="20" step="0.1" value="5">
+                                    <span class="slider-value" id="energyValue">5.0</span>
+                                </div>
+                                <div class="slider-container">
+                                    <label for="barrierHeight">Barrier Height</label>
+                                    <input type="range" id="barrierHeight" min="1" max="15" step="0.1" value="8">
+                                    <span class="slider-value" id="barrierValue">8.0</span>
+                                </div>
+                                <div class="slider-container">
+                                    <label for="barrierWidth">Barrier Width</label>
+                                    <input type="range" id="barrierWidth" min="0.1" max="5" step="0.1" value="1">
+                                    <span class="slider-value" id="widthValue">1.0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <h4>Barrier Types</h4>
+                            <div class="barrier-grid">
+                                <button class="barrier-btn active" data-barrier="single">
+                                    Single Barrier
+                                </button>
+                                <button class="barrier-btn" data-barrier="double">
+                                    Double Barrier
+                                </button>
+                                <button class="barrier-btn" data-barrier="periodic">
+                                    Periodic
+                                </button>
+                                <button class="barrier-btn" data-barrier="ramp">
+                                    Ramp
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <h4>Scattering Results</h4>
+                            <div class="results-display">
+                                <div class="result-item">
+                                    <span class="result-label">Transmission:</span>
+                                    <span class="result-value" id="transmissionValue">0%</span>
+                                </div>
+                                <div class="result-item">
+                                    <span class="result-label">Reflection:</span>
+                                    <span class="result-value" id="reflectionValue">0%</span>
+                                </div>
+                                <div class="result-item">
+                                    <span class="result-label">Tunneling:</span>
+                                    <span class="result-value" id="tunnelingValue">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="visualization-grid">
+                        <div class="glass-panel plot-panel">
+                            <div class="panel-header">
+                                <h3>Scattering Potential</h3>
+                            </div>
+                            <div id="scatteringPlot" class="plot-container"></div>
+                        </div>
+
+                        <div class="glass-panel plot-panel">
+                            <div class="panel-header">
+                                <h3>Transmission vs Energy</h3>
+                            </div>
+                            <div id="transmissionPlot" class="plot-container"></div>
+                        </div>
+
+                        <div class="glass-panel plot-panel">
+                            <div class="panel-header">
+                                <h3>Wavepacket Dynamics</h3>
+                            </div>
+                            <div id="wavepacketPlot" class="plot-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Tab -->
+            <div class="tab-content" id="advanced-tab">
+                <div class="content-grid">
+                    <div class="glass-panel controls-panel">
+                        <div class="panel-header">
+                            <h3>Advanced Quantum Systems</h3>
+                        </div>
+
+                        <div class="control-group">
+                            <h4>Quantum Systems</h4>
+                            <div class="system-grid">
+                                <button class="system-btn active" data-system="hydrogen">
+                                    Hydrogen Atom
+                                </button>
+                                <button class="system-btn" data-system="spin">
+                                    Spin Systems
+                                </button>
+                                <button class="system-btn" data-system="harmonic2D">
+                                    2D Oscillator
+                                </button>
+                                <button class="system-btn" data-system="quantumDot">
+                                    Quantum Dot
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <h4>Quantum Numbers</h4>
+                            <div class="quantum-numbers">
+                                <div class="input-group">
+                                    <label for="nQuantum">n (Principal)</label>
+                                    <input type="number" id="nQuantum" min="1" max="6" value="1">
+                                </div>
+                                <div class="input-group">
+                                    <label for="lQuantum">l (Orbital)</label>
+                                    <input type="number" id="lQuantum" min="0" max="5" value="0">
+                                </div>
+                                <div class="input-group">
+                                    <label for="mQuantum">m (Magnetic)</label>
+                                    <input type="number" id="mQuantum" min="-5" max="5" value="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <h4>Quantum Information</h4>
+                            <div class="quantum-info">
+                                <div class="input-group">
+                                    <label for="qubitState">Qubit State (α,β)</label>
+                                    <input type="text" id="qubitState" placeholder="1, 0" value="1, 0">
+                                </div>
+                                <button id="applyQubit" class="glass-btn primary">Apply Qubit</button>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <h4>Quantum Gates</h4>
+                            <div class="gate-grid">
+                                <button class="gate-btn" data-gate="hadamard">H</button>
+                                <button class="gate-btn" data-gate="pauliX">X</button>
+                                <button class="gate-btn" data-gate="pauliY">Y</button>
+                                <button class="gate-btn" data-gate="pauliZ">Z</button>
+                                <button class="gate-btn" data-gate="cnot">CNOT</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="visualization-grid">
+                        <div class="glass-panel plot-panel">
+                            <div class="panel-header">
+                                <h3 id="advancedPlotTitle">Hydrogen Atom</h3>
+                            </div>
+                            <div id="advancedPlot" class="plot-container"></div>
+                        </div>
+
+                        <!-- <div class="glass-panel plot-panel">
+                            <div class="panel-header"> -->
+                                <!-- <h3>Bloch Sphere</h3> -->
+                            </div>
+                            <!-- <div id="blochSphere" class="plot-container"></div> -->
+                        </div>
+
+                        <!-- <div class="glass-panel plot-panel">
+                            <div class="panel-header">
+                                <h3>Density Matrix</h3> -->
+                            </div>
+                            <!-- <div id="densityMatrix" class="plot-container"></div> -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+            <!-- Footer -->
+        <footer class="glass-footer">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <span class="app-version">QuantumLab Pro v1.0</span>
+                    <span class="app-status" id="appStatus">● Ready</span>
+                 </div>
+                <span class="creator-name">Created by Bhupinderjeet Singh, B.Tech CSE(AI/ML) </span>
+                <div class="footer-links">
+                    <button class="footer-link" id="themeToggle">Theme</button>
+                    <button class="footer-link" id="fullscreenToggle">Fullscreen</button>
+                    <button class="footer-link" id="exportData">Export</button>
+                </div>
+            </div>
+        </footer>
+  
+
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-content">
+            <div class="quantum-spinner"></div>
+            <h2>Initializing Quantum Engine</h2>
+            <p>Loading wavefunctions and operators...</p>
+            <div class="loading-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <span class="progress-text" id="progressText">0%</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="quantum.js"></script>
+</body>
+</html>
+
+
+
+
