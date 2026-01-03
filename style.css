@@ -1,17 +1,18 @@
 /* Base styles */
 :root {
     --primary: #ffffff;
-    --primary-dark: #6b6868;
-    --primary-light: #d4dbd7;
-    --secondary: #505350;
-    --accent: #484a4b;
+    --primary-dark: #ffffff;
+    --primary-light: #ffffff;
+    --secondary: #ffffff;
+    --accent: #ffffff;
     --dark: #000000;
     --light: #ffffff;
-    --glass: rgba(93, 97, 92, 0.034);
-    --glass-border: rgba(90, 85, 85, 0.12);
+    --glass: rgba(0, 0, 0, 0.4);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    /* Brighter 0.3 reduced to 0.12, now 0.2 for visibility */
     --text: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.8);
-    --text-muted: rgba(255, 255, 255, 0.979);
+    --text-secondary: rgba(255, 255, 255, 0.9);
+    --text-muted: rgba(255, 255, 255, 0.7);
     --blur-amount: blur(20px);
     --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -24,7 +25,8 @@
 
 body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: #000000;
+    background: url('background.png') no-repeat center center fixed;
+    background-size: cover;
     color: var(--text);
     min-height: 100vh;
     overflow-x: hidden;
@@ -40,21 +42,13 @@ body {
     width: 100%;
     height: 100%;
     z-index: -1;
-    background:
-        radial-gradient(circle at 20% 80%, rgba(50, 53, 51, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(85, 88, 85, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 40% 40%, rgba(111, 114, 112, 0.2) 0%, transparent 50%);
-    background-color: #000000;
-    transition: var(--transition-smooth);
+    background: url('background.png') no-repeat center center fixed;
+    background-size: cover;
 }
 
-.quantum-particle {
-    position: absolute;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary), var(--accent));
-    filter: blur(40px);
-    opacity: 0.3;
-    animation: float 6s ease-in-out infinite;
+.quantum-particle,
+.glow-effect {
+    display: none;
 }
 
 .quantum-particle.p1 {
@@ -97,16 +91,7 @@ body {
     animation-delay: -3s;
 }
 
-.glow-effect {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background:
-        radial-gradient(circle at center, rgba(216, 221, 219, 0.116) 0%, transparent 70%);
-    animation: pulse 8s ease-in-out infinite;
-}
+/* Glow removed */
 
 @keyframes float {
 
@@ -141,8 +126,50 @@ body {
     backdrop-filter: var(--blur-amount);
     -webkit-backdrop-filter: var(--blur-amount);
     border: 1px solid var(--glass-border);
-    box-shadow: 0 8px 32px rgba(99, 97, 97, 0.2);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+        inset 0 0 4px 1px rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
     transition: var(--transition-smooth);
+}
+
+.glass-header::before,
+.glass-nav::before,
+.glass-panel::before,
+.glass-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.3),
+            /* Softened from 0.8 */
+            transparent);
+    z-index: 1;
+}
+
+.glass-header::after,
+.glass-nav::after,
+.glass-panel::after,
+.glass-footer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(180deg,
+            rgba(255, 255, 255, 0.3),
+            /* Softened from 0.8 */
+            transparent,
+            rgba(255, 255, 255, 0.1));
+    z-index: 1;
 }
 
 /* Container */
@@ -267,7 +294,7 @@ body {
     background: #7a7a7a;
     /* Changed to grey */
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(36, 35, 35, 0.2);
+    box-shadow: 0 8px 25px rgba(92, 88, 88, 0.199);
 }
 
 .nav-btn.active {
@@ -276,7 +303,7 @@ body {
     color: white;
     border-color: transparent;
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(162, 170, 165, 0.4);
+    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.884);
 }
 
 .nav-icon {
@@ -417,7 +444,7 @@ body {
     color: white;
     border-color: transparent;
     transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(98, 109, 103, 0.3);
+    box-shadow: 0 4px 15px rgb(254, 255, 254);
 }
 
 .btn-icon {

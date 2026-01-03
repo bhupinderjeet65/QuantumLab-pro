@@ -44,6 +44,7 @@ class QuantumLabPro {
 
         this.isAnimating = false;
         this.animationId = null;
+        this.statAnimations = new Map(); // Store animation IDs for stats
         this.quantumProperties = {
             deltaX: 0,
             deltaP: 0,
@@ -57,6 +58,7 @@ class QuantumLabPro {
         await this.showLoadingScreen();
         this.initializeEventListeners();
         this.initializeVisualizations();
+        this.updateHeaderStats();
         this.startBackgroundAnimations();
         this.hideLoadingScreen();
         this.solveAndPlot();
@@ -131,13 +133,14 @@ class QuantumLabPro {
             });
         });
 
-        // Sliders
+        // Sliders (Debounced updates)
+        const debouncedSolve = this.debounce(this.solveAndPlot.bind(this), 100);
         ['param1', 'param2', 'numStates', 'systemSize'].forEach(id => {
             const element = document.getElementById(id);
             element.addEventListener('input', (e) => {
                 this.parameters[id] = parseFloat(e.target.value);
                 document.getElementById(`${id}-value`).textContent = e.target.value;
-                this.debounce(this.solveAndPlot.bind(this), 100)();
+                debouncedSolve();
             });
         });
 
@@ -175,7 +178,23 @@ class QuantumLabPro {
         // Quantum numbers
         ['nQuantum', 'lQuantum', 'mQuantum'].forEach(id => {
             document.getElementById(id).addEventListener('change', (e) => {
-                this.quantumState[id.replace('Quantum', '')] = parseInt(e.target.value);
+                const n = parseInt(document.getElementById('nQuantum').value);
+                const l = parseInt(document.getElementById('lQuantum').value);
+                const m = parseInt(document.getElementById('mQuantum').value);
+
+                // Validation
+                if (id === 'nQuantum') {
+                    document.getElementById('lQuantum').max = n - 1;
+                }
+                if (id === 'lQuantum') {
+                    document.getElementById('mQuantum').min = -l;
+                    document.getElementById('mQuantum').max = l;
+                }
+
+                this.quantumState.n = Math.max(1, n);
+                this.quantumState.l = Math.min(this.quantumState.n - 1, Math.max(0, l));
+                this.quantumState.m = Math.min(this.quantumState.l, Math.max(-this.quantumState.l, m));
+
                 this.plotAdvancedSystem();
             });
         });
@@ -288,6 +307,8 @@ class QuantumLabPro {
                 break;
         }
 
+        this.updateHeaderStats();
+
         const activeTab = document.getElementById(`${tabName}-tab`);
         activeTab.style.animation = 'none';
         setTimeout(() => {
@@ -300,6 +321,48 @@ class QuantumLabPro {
         document.querySelector(`[data-potential="${potential}"]`).classList.add('active');
 
         this.currentPotential = potential;
+
+        // Update slider labels based on potential
+        const p1Label = document.querySelector('label[for="param1"]');
+        const p1Slider = document.getElementById('param1');
+        const p2Label = document.querySelector('label[for="param2"]');
+        const p2Container = document.querySelector('.slider-container:has(#param2)');
+
+        switch (potential) {
+            case 'harmonic':
+                p1Label.textContent = 'Frequency (ω)';
+                p1Slider.min = 0.1; p1Slider.max = 5; p1Slider.step = 0.1;
+                p2Container.style.display = 'none';
+                break;
+            case 'infinite':
+                p1Label.textContent = 'Well Width (a)';
+                p1Slider.min = 1; p1Slider.max = 10; p1Slider.step = 0.5;
+                p2Container.style.display = 'none';
+                break;
+            case 'finite':
+                p1Label.textContent = 'Well Width (a)';
+                p1Slider.min = 1; p1Slider.max = 10; p1Slider.step = 0.5;
+                p2Label.textContent = 'Well Depth (V₀)';
+                p2Container.style.display = 'block';
+                break;
+            case 'step':
+                p1Label.textContent = 'Step Height (V₀)';
+                p1Slider.min = 0; p1Slider.max = 10; p1Slider.step = 0.1;
+                p2Container.style.display = 'none';
+                break;
+            case 'double':
+                p1Label.textContent = 'Separation (d)';
+                p2Label.textContent = 'Well Depth (V₀)';
+                p2Container.style.display = 'block';
+                break;
+            case 'coulomb':
+                p1Label.textContent = 'Charge (Z)';
+                p2Container.style.display = 'none';
+                break;
+            default:
+                p1Label.textContent = 'Parameter 1';
+                p2Container.style.display = 'block';
+        }
 
         const customParams = document.getElementById('customParams');
         customParams.style.display = potential === 'custom' ? 'block' : 'none';
@@ -329,6 +392,19 @@ class QuantumLabPro {
 
         this.currentSystem = system;
         this.plotAdvancedSystem();
+        this.refreshUI();
+    }
+
+    refreshUI() {
+        try {
+            if (this.currentTab === 'wavefunctions') {
+                this.updatePlotInfo();
+            }
+            this.calculateQuantumProperties();
+            this.updateHeaderStats();
+        } catch (e) {
+            console.error('UI Refresh Error:', e);
+        }
     }
 
     // Core Quantum Mechanics Functions
@@ -338,8 +414,8 @@ class QuantumLabPro {
 
         switch (this.currentPotential) {
             case 'harmonic':
-                // param1 is omega. V = 0.5 * m * omega^2 * x^2. m=1 -> V = 0.5 * omega^2 * x^2
-                return 0.5 * p1 * p1 * x * x;
+                // V = 0.5 * m * omega^2 * x^2. m=1 -> V = 0.5 * omega^2 * x^2
+                return x.map(xi => 0.5 * p1 * p1 * xi * xi);
             case 'infinite':
                 return x.map(xi => Math.abs(xi) > p1 / 2 ? 1000 : 0);
             case 'finite':
@@ -367,7 +443,7 @@ class QuantumLabPro {
                     return new Array(x.length).fill(0);
                 }
             default:
-                return 0.5 * x * x;
+                return x.map(xi => 0.5 * xi * xi);
         }
     }
 
@@ -403,9 +479,9 @@ class QuantumLabPro {
                         wavefunction = this.hoWavefunction(x, n, omega);
                         break;
                     case 'infinite':
-                        const L = this.parameters.systemSize;
-                        energy = this.boxEnergy(n, L);
-                        wavefunction = this.boxWavefunction(x, n, L);
+                        const boxWidth = this.parameters.param1;
+                        energy = this.boxEnergy(n, boxWidth);
+                        wavefunction = this.boxWavefunction(x, n, boxWidth);
                         break;
                 }
 
@@ -538,12 +614,11 @@ class QuantumLabPro {
     // Wavefunctions Tab
     solveAndPlot() {
         const data = this.solveSchrodinger1D();
-        this.latestEnergies = data.energies; // Store for header stats
+        this.latestResults = data; // Store full results
         this.plotWavefunctions(data);
         this.plotProbabilityDensities(data);
         this.plotEnergyDiagram(data);
-        this.calculateQuantumProperties(data);
-        this.updatePlotInfo();
+        this.refreshUI();
     }
 
     plotWavefunctions(data) {
@@ -1254,10 +1329,19 @@ class QuantumLabPro {
         const { n, l, m } = this.quantumState;
         const r = Array.from({ length: 100 }, (_, i) => 0.1 + i * 10 / 99);
 
-        // Radial wavefunction approximation
+        // Radial wavefunction R_nl (simplified Laguerre-based for n,l)
         const radial = r.map(ri => {
-            const laguerre = Math.pow(ri, l) * Math.exp(-ri / n);
-            return laguerre;
+            // Associated Laguerre polynomial approximations for low n,l
+            let rho = 2 * ri / n;
+            let L_nl = 1.0;
+
+            if (n === 1 && l === 0) L_nl = 1.0;
+            else if (n === 2 && l === 0) L_nl = 1.0 - 0.5 * rho;
+            else if (n === 2 && l === 1) L_nl = 1.0;
+            else if (n === 3 && l === 0) L_nl = 1.0 - rho + (1 / 6) * rho * rho;
+            else if (n === 3 && l === 1) L_nl = 1.0 - (1 / 4) * rho;
+
+            return Math.pow(ri, l) * L_nl * Math.exp(-ri / n);
         });
 
         const traces = [{
@@ -1361,8 +1445,13 @@ class QuantumLabPro {
     plotBlochSphere() {
         // Simple Bloch sphere representation
         const [alpha, beta] = this.quantumState.qubit;
-        const theta = 2 * Math.acos(Math.abs(alpha));
-        const phi = Math.atan2(Math.imag(beta), Math.real(beta));
+
+        // Use math.js for robust complex handling if available
+        let a = typeof math !== 'undefined' ? math.complex(alpha) : { re: alpha, im: 0 };
+        let b = typeof math !== 'undefined' ? math.complex(beta) : { re: beta, im: 0 };
+
+        const theta = 2 * Math.acos(Math.min(1, math.abs(a)));
+        const phi = math.arg ? math.arg(b) - math.arg(a) : Math.atan2(b.im || 0, b.re || 0);
 
         // Create sphere
         const u = Array.from({ length: 50 }, (_, i) => i * Math.PI / 49);
@@ -1498,18 +1587,25 @@ class QuantumLabPro {
     }
 
     // Utility Functions
-    calculateQuantumProperties(data) {
-        if (data.wavefunctions.length === 0) return;
+    calculateQuantumProperties() {
+        if (!this.latestResults || !this.latestResults.wavefunctions.length) return;
 
+        const data = this.latestResults;
         const groundState = data.wavefunctions[0];
         const x = data.x;
         const dx = x[1] - x[0];
 
+        // Position uncertainty Delta X
         const xExpectation = this.expectationValue(x, groundState, x, dx);
         const x2Expectation = this.expectationValue(x.map(xi => xi * xi), groundState, x, dx);
-        const deltaX = Math.sqrt(x2Expectation - xExpectation * xExpectation);
+        const deltaX = Math.sqrt(Math.max(0, x2Expectation - xExpectation * xExpectation));
 
-        const deltaP = 0.5 / (deltaX || 0.5);
+        // Momentum uncertainty Delta P
+        const vExpectation = this.expectationValue(data.potential, groundState, x, dx);
+        const hExpectation = data.energies[0];
+        const p2Expectation = 2 * Math.max(0, hExpectation - vExpectation);
+        const deltaP = Math.sqrt(p2Expectation);
+
         const uncertaintyProduct = deltaX * deltaP;
 
         this.quantumProperties = { deltaX, deltaP, uncertaintyProduct };
@@ -1551,54 +1647,74 @@ class QuantumLabPro {
     updateHeaderStats() {
         const particleCount = document.getElementById('particleCount');
         const energyLevel = document.getElementById('energyLevel');
+        if (!particleCount || !energyLevel) return;
 
+        let numStates = this.parameters.numStates;
         let groundStateEnergy = 0;
-        if (this.currentPotential === 'harmonic') {
-            groundStateEnergy = this.hoEnergy(0, this.parameters.param1);
-        } else if (this.currentPotential === 'infinite') {
-            groundStateEnergy = this.boxEnergy(0, this.parameters.systemSize);
+
+        if (this.latestResults && this.latestResults.energies.length > 0) {
+            groundStateEnergy = this.latestResults.energies[0];
+            numStates = this.latestResults.energies.length;
         } else {
-            // For numerical results, better to store them. 
-            // But for now, let's recalculate or use a safe fallback if numerical.
-            // Since we don't store "data" globally, let's just use the HO formula as fallback 
-            // OR re-run the cheap analytical functions.
-            groundStateEnergy = this.hoEnergy(0, this.parameters.param1);
+            // Fallback to analytical if no simulation results yet
+            if (this.currentPotential === 'harmonic') {
+                groundStateEnergy = this.hoEnergy(0, this.parameters.param1);
+            } else if (this.currentPotential === 'infinite') {
+                groundStateEnergy = this.boxEnergy(0, this.parameters.systemSize);
+            }
         }
 
-        // If we have stored latest energies from a plot update, use them
-        if (this.latestEnergies && this.latestEnergies.length > 0) {
-            groundStateEnergy = this.latestEnergies[0];
-        }
-
-        this.animateValue(particleCount, this.parameters.numStates);
+        this.animateValue(particleCount, numStates);
         this.animateValue(energyLevel, groundStateEnergy.toFixed(3));
-        if (this.quantumProperties && this.quantumProperties.uncertaintyProduct) {
-            const uncertainty = document.getElementById('uncertainty');
-            this.animateValue(uncertainty, this.quantumProperties.uncertaintyProduct.toFixed(2));
+
+        const uncertaintyElement = document.getElementById('uncertainty');
+        if (uncertaintyElement && this.quantumProperties.uncertaintyProduct) {
+            this.animateValue(uncertaintyElement, this.quantumProperties.uncertaintyProduct.toFixed(2));
         }
     }
 
     animateValue(element, target) {
-        const current = parseFloat(element.textContent);
+        const id = element.id;
+        if (this.statAnimations.has(id)) {
+            cancelAnimationFrame(this.statAnimations.get(id));
+        }
+
+        const currentText = element.textContent.replace(/[^0-9.-]/g, '');
+        const current = parseFloat(currentText) || 0;
         const targetNum = parseFloat(target);
 
-        if (current === targetNum) return;
+        if (Math.abs(current - targetNum) < 0.001) {
+            element.textContent = target;
+            return;
+        }
 
-        const increment = (targetNum - current) / 10;
-        let currentValue = current;
+        const duration = 500; // ms
+        const start = performance.now();
 
-        const animate = () => {
-            currentValue += increment;
-            if ((increment > 0 && currentValue >= targetNum) ||
-                (increment < 0 && currentValue <= targetNum)) {
-                element.textContent = target;
-                return;
+        const animate = (now) => {
+            const elapsed = now - start;
+            const progress = Math.min(elapsed / duration, 1);
+
+            // Ease out quad
+            const eased = progress * (2 - progress);
+
+            const value = current + (targetNum - current) * eased;
+
+            if (id === 'particleCount') {
+                element.textContent = Math.round(value);
+            } else {
+                element.textContent = value.toFixed(progress === 1 ? 3 : 2);
             }
-            element.textContent = currentValue.toFixed(increment < 1 ? 2 : 0);
-            requestAnimationFrame(animate);
+
+            if (progress < 1) {
+                this.statAnimations.set(id, requestAnimationFrame(animate));
+            } else {
+                element.textContent = target;
+                this.statAnimations.delete(id);
+            }
         };
 
-        animate();
+        this.statAnimations.set(id, requestAnimationFrame(animate));
     }
 
     getPlotLayout(title, xTitle, yTitle) {
