@@ -28,7 +28,7 @@ body {
     /* Use dynamic viewport units on mobile and avoid background-attachment: fixed
        which causes viewport / address-bar related white gaps on some mobile browsers */
     background: url('background.png') no-repeat center center;
-    background-attachment: scroll;
+    background-attachment: fixed;
     background-size: cover;
     color: var(--text);
     min-height: 100dvh;
@@ -47,8 +47,9 @@ body {
     height: 100dvh;
     z-index: -1;
     background: url('background.png') no-repeat center center;
-    background-attachment: scroll;
+    background-attachment: fixed;
     background-size: cover;
+    pointer-events: none;
 }
 
 .quantum-particle,
