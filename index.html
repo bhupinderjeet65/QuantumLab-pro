@@ -137,7 +137,7 @@
                                     <span class="slider-value" id="param2-value">1.0</span>
                                 </div>
                                 <div class="slider-container">
-                                    <div class="units-badge" style="font-size: 0.8em; color: #aaa; margin-bottom: 5px;">
+                                    <div class="units-badge">
                                         Units: Atomic (ℏ=1, m=1)</div>
                                     <label for="numStates">Energy Levels</label>
                                     <input type="range" id="numStates" min="1" max="8" step="1" value="5">
@@ -152,7 +152,7 @@
                         </div>
 
                         <!-- Custom Parameters -->
-                        <div class="control-group custom-params" id="customParams" style="display: none;">
+                        <div class="control-group custom-params" id="customParams">
                             <h4>Custom Potential</h4>
                             <div class="custom-inputs">
                                 <div class="input-group">
@@ -393,7 +393,7 @@
                         <div class="control-group">
                             <h4>Initial State</h4>
                             <div class="state-selection">
-                                <select id="initialState" class="glass-select">
+                                <select id="initialState" class="glass-select" title="Select initial quantum state">
                                     <option value="ground">Ground State</option>
                                     <option value="first">First Excited State</option>
                                     <option value="superposition">Superposition</option>
@@ -745,8 +745,7 @@
                         <p><strong>IS NOT:</strong> A symbolic algebra system, A research-grade solver, A replacement
                             for mathematical derivations.</p>
 
-                        <p
-                            style="margin-top: 20px; font-style: italic; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+                        <p class="quantum-quote">
                             "Quantum mechanics is not only equations — it is structure, symmetry, and evolution. Use
                             this application to see what equations mean, test your understanding, and build physical
                             intuition. If you can explain what you see here in words, you are truly learning quantum

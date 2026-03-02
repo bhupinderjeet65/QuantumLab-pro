@@ -25,10 +25,13 @@
 
 body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: url('background.png') no-repeat center center fixed;
+    /* Use dynamic viewport units on mobile and avoid background-attachment: fixed
+       which causes viewport / address-bar related white gaps on some mobile browsers */
+    background: url('background.png') no-repeat center center;
+    background-attachment: scroll;
     background-size: cover;
     color: var(--text);
-    min-height: 100vh;
+    min-height: 100dvh;
     overflow-x: hidden;
     line-height: 1.6;
     transition: var(--transition-smooth);
@@ -40,9 +43,11 @@ body {
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
+    /* Use dynamic viewport height to avoid white gaps on mobile when address bar changes */
+    height: 100dvh;
     z-index: -1;
-    background: url('background.png') no-repeat center center fixed;
+    background: url('background.png') no-repeat center center;
+    background-attachment: scroll;
     background-size: cover;
 }
 
@@ -177,7 +182,7 @@ body {
     max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
-    min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     gap: 20px;
